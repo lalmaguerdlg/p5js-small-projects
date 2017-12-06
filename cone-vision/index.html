@@ -10,7 +10,14 @@
 	<script src="libraries/p5.js"></script>
 	<script src="libraries/p5.dom.js"></script>
 	<script src="libraries/p5.sound.js"></script>
+	<script src="libraries/jquery-3.2.1.slim.min.js"></script>
 	<script src="sketch.js"></script>
+
+	<script>
+        $(document).ready(function(){
+            $('body').on('contextmenu', 'canvas', () => false );
+        });
+	</script>
 
 	<style>
 		body {
