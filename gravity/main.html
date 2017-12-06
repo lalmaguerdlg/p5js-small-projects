@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>gravity</title>
+</head>
+<body style="padding: 0px; margin: 0px;">
+    
+    
+    <script src="libs/jquery-3.2.1.slim.min.js"></script>
+    <script src="libs/p5.min.js"></script>
+    <script src="mover.js"></script>
+    <script src="attractor.js"></script>
+    <script src="sketch.js"></script>
+    <script>
+        $(document).ready(function(){
+            $('body').on('contextmenu', 'canvas', function(e){ return false; });
+        });
+    </script>
+</body>
+</html>
