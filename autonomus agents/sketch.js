@@ -1,4 +1,4 @@
-const DEBUG_MODE = true;
+const DEBUG_MODE = false;
 const CLEAR_SCREEN = true;
 const LIMIT_BORDER_OFFSET = 50;
 
@@ -18,9 +18,10 @@ var path = 0;
 function setup() {
     createCanvas(windowWidth, windowHeight);
     path = new Path(createVector(0, windowHeight * 0.5), createVector(windowWidth, windowHeight * 0.5), 30);
-    /*for(let i = 0; i < 200; i++){
+    for(let i = 0; i < 200; i++){
         movers.push(new Mover(random(windowWidth), random(windowHeight), 5 + random(10)));
-    }*/
+    }
+    background(28, 31, 35);
 }
 
 function windowResized() {
@@ -29,6 +30,11 @@ function windowResized() {
 
 function update(){
     for(let m of movers){
+
+        for(let a of attractors){
+            let f = a.attract(m);
+            m.addForce(f);
+        }
 
         m.evade(movers);
         m.follow(path);
@@ -45,7 +51,7 @@ function draw() {
         background(28,31,35);
     }
 
-    path.draw();
+    //path.draw();
 
     for(let a of attractors){
         a.draw();
