@@ -1,0 +1,10 @@
+{
+  "name": "p5-small-projects",
+  "projects": [
+    "autonomus agents",
+    "cone-vision",
+    "gravity",
+    "snake",
+    "tiro parabolico"
+  ]
+}
