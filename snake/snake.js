@@ -5,6 +5,7 @@ class Snake {
         this.vel = createVector(0, 0);
         this.currentDir = "RIGHT";
         this.history = new Array();
+        this.history.push(this.pos);
         this.changeDirection(this.currentDir);
     }
 
@@ -23,10 +24,24 @@ class Snake {
 
     draw() {
         fill(255);
-        for (let i = 0; i < this.history.length; i++) {
-            rect(this.history[i].x, this.history[i].y, GRID_SIZE, GRID_SIZE);
+        let halfSize = GRID_SIZE * 0.5;
+        let startSize = GRID_SIZE;
+        stroke(255);
+        
+        for (let i = 0; i < this.history.length - 1; i++) {
+            
+            let size = map(i, 0, this.history.length -1,  halfSize, startSize, true);
+            strokeWeight(size);
+            line(this.history[i].x + halfSize, this.history[i].y + halfSize,
+                this.history[i + 1].x + halfSize, this.history[i + 1].y + halfSize);
+            //rect(this.history[i].x, this.history[i].y, GRID_SIZE, GRID_SIZE);
         }
-        rect(this.pos.x, this.pos.y, GRID_SIZE, GRID_SIZE);
+        strokeWeight(startSize);
+        line(this.pos.x + halfSize, this.pos.y + halfSize,
+            this.history[this.history.length - 1].x + halfSize, this.history[this.history.length - 1].y + halfSize);
+        noStroke();
+        
+        ellipse(this.pos.x + halfSize, this.pos.y + halfSize, GRID_SIZE, GRID_SIZE);
     }
 
     eat(food) {

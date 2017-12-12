@@ -5,6 +5,8 @@
     "cone-vision",
     "gravity",
     "snake",
-    "tiro parabolico"
+    "tiro parabolico",
+    "game",
+    "game of life"
   ]
 }

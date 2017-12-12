@@ -47,6 +47,9 @@ function keyPressed(){
 		case LEFT_ARROW:
 			snake.changeDirection("LEFT");
 		break;
+		case 32:
+			snake.eat(snake.pos);
+		break;
 	}
 }
 
