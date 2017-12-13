@@ -3,9 +3,11 @@
   "projects": [
     "autonomus agents",
     "cone-vision",
+    "cubic-bezier",
+    "game of life",
     "gravity",
     "snake",
-    "tiro parabolico",
-    "game of life"
+    "tiro parabolico"
+    
   ]
 }
