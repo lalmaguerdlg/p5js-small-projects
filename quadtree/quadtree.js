@@ -18,8 +18,86 @@ class Rectangle{
                 point.y >= this.y - this.height &&
                 point.y <= this.y + this.height)
     }
+
+    intersects(collider) {
+        if (collider instanceof Circle) return this._intersectsCircle(collider);
+        if (collider instanceof Rectangle) return this._intersectsRectangle(collider);
+    }
+
+    _intersectsCircle(other) {
+        let circle_distance = {
+            x: Math.abs(other.x - this.x),
+            y: Math.abs(other.y - this.y)
+        }
+
+        if (circle_distance.x > (this.width + other.rad)) { return false; }
+        if (circle_distance.y > (this.height + other.rad)) { return false; }
+
+        if (circle_distance.x <= (this.width)) { return true; }
+        if (circle_distance.y <= (this.height)) { return true; }
+
+        let corner_dist_sqr = Math.pow(circle_distance.x - this.width, 2) +
+            Math.pow(circle_distance.y - this.height, 2);
+
+        return (corner_dist_sqr <= (other.rad * other.rad));
+    }
+
+    _intersectsRectangle(other) {
+        return ((this.x - this.width) < (other.x + other.width) &&
+            (this.x + this.width) > (other.x - other.width) && 
+            (this.y - this.height) < (other.y + other.width) &&
+            (this.y + this.height) > (other.y - other.width));
+    }
 }
 
+class Circle{
+    constructor(x, y, rad){
+        this.x = x;
+        this.y = y;
+        this.rad = rad;
+    }
+
+    contains(point){
+        let direction = {
+            x: point.x - this.x,
+            y: point.y - this.y
+        }
+        let distance_sqr = Math.pow(direction.x, 2) + Math.pow(direction.y, 2);
+        return (distance_sqr <= (this.rad))
+    }
+
+    intersects(collider){
+        if (collider instanceof Circle) return this._intersectsCircle(collider);
+        if (collider instanceof Rectangle) return this._intersectsRectangle(collider);
+    }
+
+    _intersectsCircle(other){
+        let direction = {
+            x: other.x - this.x,
+            y: other.y - this.y
+        }
+        let distance_sqr = Math.pow(direction.x, 2) + Math.pow(direction.y, 2);
+        return (distance_sqr <= (this.rad + other.rad))
+    }
+
+    _intersectsRectangle(other){
+        let circle_distance = {
+            x: Math.abs(this.x - other.x),
+            y: Math.abs(this.y - other.y)
+        }
+
+        if (circle_distance.x > (other.width + this.rad)) { return false; }
+        if (circle_distance.y > (other.height + this.rad)) { return false; }
+
+        if (circle_distance.x <= (other.width)) { return true; }
+        if (circle_distance.y <= (other.height)) { return true; }
+
+        let corner_dist_sqr = Math.pow(circle_distance.x - other.width, 2) +
+            Math.pow(circle_distance.y - other.height, 2);
+
+        return (corner_dist_sqr <= (this.rad * this.rad));
+    }
+}
 
 class QuadTree{
     constructor(boundary, capacity, levels, level){
@@ -33,6 +111,24 @@ class QuadTree{
         this.max_count = capacity * Math.pow(4, this.levels - this.level - 1);
     }
     
+    query(area, iterations){
+        let result = [];
+        iterations.value++;
+        if(this.subdivided){
+            for(let section in this.sections){
+                let region = this.sections[section];
+                if (area.intersects(region.boundary)){
+                    let section_result = region.query(area, iterations);
+                    result = result.concat(section_result);
+                }
+            }
+        } else {
+            if(area.intersects(this.boundary))
+                result.push(this);
+        }
+        return result;
+    }
+
     count(){
         let total = this.points.length;
         for(let section in this.sections) {
