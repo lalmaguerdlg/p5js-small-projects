@@ -15,7 +15,7 @@ class Point{
             y: this.y - other.y
         }
         let distance_sqr = Math.pow(direction.x, 2) + Math.pow(direction.y, 2);
-        return (distance_sqr <= (other.rad))
+        return (distance_sqr <= (other.rad * other.rad))
     }
 
     _insideRectangle(other){
@@ -84,7 +84,7 @@ class Circle{
             y: point.y - this.y
         }
         let distance_sqr = Math.pow(direction.x, 2) + Math.pow(direction.y, 2);
-        return (distance_sqr <= (this.rad))
+        return (distance_sqr <= (this.rad * this.rad))
     }
 
     intersects(collider){
@@ -134,19 +134,38 @@ class QuadTree{
         this.max_count = capacity * Math.pow(4, this.levels - this.level - 1);
     }
     
-    query(area){
+    querySections(area){
         let result = new QuadTreeCollection();
         if(this.subdivided){
             for(let section in this.sections){
                 let region = this.sections[section];
                 if (area.intersects(region.boundary)){
-                    let section_result = region.query(area);
+                    let section_result = region.querySections(area);
                     result.concat(section_result);
                 }
             }
         } else {
             if(area.intersects(this.boundary))
                 result.push(this);
+        }
+        return result;
+    }
+
+    query(area){
+        let result = [];
+        if(this.subdivided){
+            for(let section in this.sections){
+                let region = this.sections[section];
+                if (area.intersects(region.boundary)){
+                    let section_result = region.query(area);
+                    result = result.concat(section_result);
+                }
+            }
+        }else{
+            for(let p of this.points){
+                if(area.contains(p))
+                    result.push(p);
+            }
         }
         return result;
     }
@@ -178,21 +197,24 @@ class QuadTree{
             this.sections.southeast = new QuadTree(se, this.capacity, this.levels, next_level, this.allow_overflow);
             this.sections.southwest = new QuadTree(sw, this.capacity, this.levels, next_level, this.allow_overflow);
 
-            for(let section in this.sections) {
-                for(let p of this.points) {
-                    this.sections[section].insert(p);
-                }
+            //for(let section in this.sections) {
+                //for(let p of this.points) {
+                //    this.sections[section].insert(p);
+                //}
+            //}
+            this.subdivided = true;
+            for(let p of this.points) {
+                this.insert(p);
             }
 
             this.points = [];
-            this.subdivided = true;
+            
             return true;
         }
         return false;
     }
 
     insert(point){
-
         if(!this.boundary.contains(point))
             return false;
 
@@ -217,6 +239,14 @@ class QuadTree{
             }
         }
         return false;
+    }
+}
+
+class QuadTreeNode{
+    constructor(x, y, object, root){
+        this.point = new Point(x, y);
+        this.object = object;
+        this.quadTreeRoot = root;
     }
 }
 
