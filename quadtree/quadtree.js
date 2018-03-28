@@ -3,6 +3,27 @@ class Point{
         this.x = x;
         this.y = y;
     }
+
+    inside(collider){
+        if (collider instanceof Circle) return this._insideCircle(collider);
+        if (collider instanceof Rectangle) return this._insideRectangle(collider);
+    }
+
+    _insideCircle(other){
+        let direction = {
+            x: this.x - other.x,
+            y: this.y - other.y
+        }
+        let distance_sqr = Math.pow(direction.x, 2) + Math.pow(direction.y, 2);
+        return (distance_sqr <= (other.rad))
+    }
+
+    _insideRectangle(other){
+        return (this.x >= other.x - other.width &&
+            this.x <= other.x + other.width &&
+            this.y >= other.y - other.height &&
+            this.y <= other.y + other.height)
+    }
 }
 
 class Rectangle{
@@ -108,18 +129,19 @@ class QuadTree{
         this.points = [];
         this.level = level || 0;
         this.levels = levels || 7;
+        this.allow_overflow = true;
+        
         this.max_count = capacity * Math.pow(4, this.levels - this.level - 1);
     }
     
-    query(area, iterations){
-        let result = [];
-        iterations.value++;
+    query(area){
+        let result = new QuadTreeCollection();
         if(this.subdivided){
             for(let section in this.sections){
                 let region = this.sections[section];
                 if (area.intersects(region.boundary)){
-                    let section_result = region.query(area, iterations);
-                    result = result.concat(section_result);
+                    let section_result = region.query(area);
+                    result.concat(section_result);
                 }
             }
         } else {
@@ -151,10 +173,10 @@ class QuadTree{
             let se = new Rectangle(x + half_w, y + half_h, half_w, half_h);
             let sw = new Rectangle(x - half_w, y + half_h, half_w, half_h);
             
-            this.sections.northwest = new QuadTree(nw, this.capacity, this.levels, next_level);
-            this.sections.northeast = new QuadTree(ne, this.capacity, this.levels, next_level);
-            this.sections.southeast = new QuadTree(se, this.capacity, this.levels, next_level);
-            this.sections.southwest = new QuadTree(sw, this.capacity, this.levels, next_level);
+            this.sections.northwest = new QuadTree(nw, this.capacity, this.levels, next_level, this.allow_overflow);
+            this.sections.northeast = new QuadTree(ne, this.capacity, this.levels, next_level, this.allow_overflow);
+            this.sections.southeast = new QuadTree(se, this.capacity, this.levels, next_level, this.allow_overflow);
+            this.sections.southwest = new QuadTree(sw, this.capacity, this.levels, next_level, this.allow_overflow);
 
             for(let section in this.sections) {
                 for(let p of this.points) {
@@ -180,8 +202,11 @@ class QuadTree{
         }
         else{
             if(!this.subdivided){
-                if(!this.subdivide(point))
-                    return false;
+                if(!this.subdivide(point)){ 
+                    if(this.allow_overflow)
+                        this.points.push(point);
+                    return this.allow_overflow;
+                }
             }
             
             if(this.sections.northwest.insert(point) || 
@@ -192,5 +217,42 @@ class QuadTree{
             }
         }
         return false;
+    }
+}
+
+class QuadTreeCollection{
+    constructor(array){
+        this.collection = [];
+        this.concat(array);
+    }
+
+    concat(other){
+        if(other instanceof Array) { this.collection = this.collection.concat(other); }
+        else if(other instanceof QuadTreeCollection) { this.collection = this.collection.concat(other.collection); }
+        else if(other instanceof QuadTree) { this.push(other); }
+    }
+
+    push(quadTree){
+        if (!quadTree instanceof QuadTree) { console.error("Must push only QuadTree instances."); return }
+        this.collection.push(quadTree);
+    }
+
+    get_points(){
+        let result = [];
+        for(let qt of this.collection){
+            result = result.concat(this._get_points_recursive(qt));
+        }
+        return result;
+    }
+
+    _get_points_recursive(quadTree){
+        let result = [];
+        if(quadTree.subdivided){
+            for(let section of quadTree.sections)
+                result = result.concat(this._get_points_recursive(quadTree.sections[section]));
+        }else{
+            result = result.concat(quadTree.points);
+        }
+        return result;
     }
 }
