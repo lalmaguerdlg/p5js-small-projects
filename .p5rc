@@ -7,7 +7,7 @@
     "game of life",
     "gravity",
     "snake",
-    "tiro parabolico"
-    
+    "tiro parabolico",
+    "quadtree"
   ]
 }
