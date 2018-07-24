@@ -32,7 +32,7 @@ function update(){
             //m.addForce(r);
         }
 
-        for(let m2 of movers){
+        for(let m2 of movers) {
             let f = m2.attract(m);
             m.addForce(f);
         }
@@ -77,13 +77,14 @@ function mouseReleased(){
 
         var initialVel = p5.Vector.sub(velEnd, velStart);
         initialVel.mult(0.01);
-        var b = new Mover(velStart.x, velStart.y, 10);
+        var b = new Mover(velStart.x, velStart.y, 50 +  random(50));
         b.impulse(initialVel);
         movers.push(b);
     }else{
         //var b = new Mover(mouseX, mouseY, 20 +  random(60));
         //movers.push(b);
-        attractors.push(new Attractor(mouseX, mouseY, 20 +  random(60)));
+        movers.push(new Mover(mouseX, mouseY, 200 +  random(600)));
+        //attractors.push(new Attractor(mouseX, mouseY, 20 +  random(60)));
     }
 }
 

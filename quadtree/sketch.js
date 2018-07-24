@@ -1,9 +1,9 @@
 const DEBUG = {
 	enabled: true,
-	show_quadtree: false,
+	show_quadtree: true,
 	show_quadrants: true,
-	show_mouse_region: false,
-	show_point_count: false
+	show_mouse_region: true,
+	show_point_count: true
 }
 var QUERY_METHOD = 2;
 let qtree;

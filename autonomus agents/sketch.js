@@ -1,4 +1,4 @@
-const DEBUG_MODE = false;
+var DEBUG_MODE = false;
 const CLEAR_SCREEN = true;
 const LIMIT_BORDER_OFFSET = 50;
 
@@ -18,11 +18,11 @@ var path = 0;
 function setup() {
     createCanvas(windowWidth, windowHeight);
     path = new Path(createVector(0, windowHeight * 0.5), createVector(windowWidth, windowHeight * 0.5), 30);
-    for(let i = 0; i < 200; i++){
+    /*for(let i = 0; i < 200; i++){
         let mover = new Mover(random(windowWidth), random(windowHeight), 5 + random(10));
         mover.addForce(p5.Vector.random2D());
         movers.push(mover);
-    }
+    }*/
     background(28, 31, 35);
 }
 

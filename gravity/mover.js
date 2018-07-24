@@ -13,6 +13,7 @@ class Mover {
     }
 
     addForce(force) {
+        force.div(this.mass);
         this.acel.add(force);   
         this.acel.limit(3.5);
     }
@@ -38,7 +39,7 @@ class Mover {
     draw(){
         fill(this.color.r, this.color.g, this.color.b);
         noStroke();
-        ellipse(this.pos.x, this.pos.y, this.mass, this.mass);
+        ellipse(this.pos.x, this.pos.y, this.mass * 0.1, this.mass * 0.1);
         if(DEBUG_MODE == true){
             arrow(this.pos, p5.Vector.add(this.pos, p5.Vector.mult(this.vel,10)) );
             arrow(this.pos, p5.Vector.add(this.pos, p5.Vector.mult(this.lastAcel,10)) );
