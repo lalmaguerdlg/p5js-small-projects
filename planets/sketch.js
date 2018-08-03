@@ -1,4 +1,4 @@
-let DEBUG_MODE = false;
+const DEBUG_MODE = false;
 const CLEAR_SCREEN = true;
 const LIMIT_BORDER_OFFSET = 50;
 
@@ -39,9 +39,6 @@ function update(){
         //let repel = m.repel(movers);
         //m.addForce(repel);
         m.update();
-        if(DEBUG_MODE == true){
-            m.calculateFuture(movers);
-        }
     }
 }
 
