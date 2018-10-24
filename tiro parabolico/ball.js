@@ -21,11 +21,8 @@ class Ball {
         this.vel.add(this.acel);
         this.pos.add(this.vel);
         
-        if(this.vel.mag() > 1){       
-            this.pos.add(this.vel);
-        }
         
-        // Colisión con el piso
+        // Colisionar con el piso
         if(this.pos.y > CANVAS_HEIGHT - this.rad){
             this.pos.y = CANVAS_HEIGHT - this.rad;
             this.vel = createVector(this.vel.x * 0.8, -this.vel.y * 0.8);
