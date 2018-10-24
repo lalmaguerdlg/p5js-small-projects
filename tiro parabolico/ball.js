@@ -20,22 +20,23 @@ class Ball {
     update(){
         this.vel.add(this.acel);
         this.pos.add(this.vel);
-        
-        
+
+        this.acel.mult(0);
+
         // Colisionar con el piso
-        if(this.pos.y > CANVAS_HEIGHT - this.rad){
-            this.pos.y = CANVAS_HEIGHT - this.rad;
+        if(this.pos.y > windowHeight - this.rad){
+            this.pos.y = windowHeight - this.rad;
             this.vel = createVector(this.vel.x * 0.8, -this.vel.y * 0.8);
         }
 
         // Codigo para mantener las pelotas dentro de los limites
-        if(this.pos.x > CANVAS_WIDTH - this.rad){
-            this.pos.x = CANVAS_WIDTH - this.rad;
+        if(this.pos.x > windowWidth + LIMIT_BORDER_OFFSET - this.rad){
+            this.pos.x = windowWidth + LIMIT_BORDER_OFFSET - this.rad;
             this.vel = createVector(-this.vel.x * 0.8, this.vel.y);
         }
 
-        if(this.pos.x < this.rad){
-            this.pos.x = this.rad;
+        if(this.pos.x < -LIMIT_BORDER_OFFSET + this.rad){
+            this.pos.x = -LIMIT_BORDER_OFFSET + this.rad;
             this.vel = createVector(-this.vel.x * 0.8, this.vel.y);
         }
     }
@@ -44,7 +45,9 @@ class Ball {
         fill(this.colorR, this.colorG, this.colorB);
         noStroke();
         ellipse(this.pos.x, this.pos.y, this.rad, this.rad);
-        arrow(this.pos, p5.Vector.add(this.pos, p5.Vector.mult(this.vel,10)) );
-        arrow(this.pos, p5.Vector.add(this.pos, p5.Vector.mult(this.acel,20)) );
+        if(DEBUG_MODE == true){
+            arrow(this.pos, p5.Vector.add(this.pos, p5.Vector.mult(this.vel,10)) );
+            arrow(this.pos, p5.Vector.add(this.pos, p5.Vector.mult(this.acel,20)) );
+        }
     }
 }

@@ -23,12 +23,8 @@ class Mover {
 
     update(){
         this.vel.add(this.acel);
-        this.vel.limit(3);
+        this.vel.limit(6);
         this.pos.add(this.vel);
-        
-        if(this.vel.mag() > 1){       
-            this.pos.add(this.vel);
-        }
         
         this.lastAcel = this.acel.copy();
         this.acel.mult(0);

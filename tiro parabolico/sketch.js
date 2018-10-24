@@ -1,9 +1,7 @@
-const CANVAS_WIDTH = 980;
-const CANVAS_HEIGHT = 500;
+let DEBUG_MODE = false;
+const LIMIT_BORDER_OFFSET = 50;
 
-var acel = 0;
-var vel = 0;
-var pos = 0;
+var gravity = 0;
 
 var isSettingNewCircle = false;
 var velStart = 0;
@@ -12,21 +10,24 @@ var velEnd = 0;
 var balls = new Array();
 
 function setup() {
-    createCanvas(CANVAS_WIDTH, CANVAS_HEIGHT);
-    
-    acel = createVector(0, 1);
-    vel = createVector(5, 0);
+    createCanvas(windowWidth, windowHeight);
+    gravity = createVector(0, 1);
+}
 
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight);
 }
 
 function update(){
     for(let b of balls){
+        b.addForce(gravity);
         b.update();
     }
 }
 
 function draw() {
     clear();
+    background(36, 45, 61);
     update();
 
     for(let b of balls){
@@ -51,7 +52,7 @@ function mouseReleased(){
     var initialVel = p5.Vector.sub(velEnd, velStart);
     initialVel.mult(0.1);
     var b = new Ball(velStart.x, velStart.y, 20);
-    b.addForce(acel);
+    b.addForce(gravity);
     b.impulse(initialVel);
     balls.push(b);
 }

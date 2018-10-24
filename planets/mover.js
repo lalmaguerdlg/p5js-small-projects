@@ -26,11 +26,7 @@ class Mover {
         this.vel.add(this.acel);
         this.vel.limit(5);
         this.pos.add(this.vel);
-        
-        if(this.vel.mag() > 1){       
-            this.pos.add(this.vel);
-        }
-        
+    
         this.lastAcel = this.acel.copy();
         this.acel.mult(0);
         this.limitBorders();

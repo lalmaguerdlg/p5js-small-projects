@@ -37,7 +37,7 @@ function draw() {
 			}
 			if(closest.ref){
 				if(closest.dist > 100)
-					m.seek(closest.ref.pos, 3, 0.1);
+					m.seek(closest.ref.pos, 6, 0.2);
 				else{
 					//m.seek(closest.ref.pos, 5, 0.05);
 				let desiredV = closest.ref.vel.copy();
@@ -89,7 +89,7 @@ function draw() {
 							//closest.ref = m2;
 						//}
 						if(dist > 20){
-							m.steer(dir, 0.05);
+							m.steer(dir, 0.09);
 						}
 					}
 					
