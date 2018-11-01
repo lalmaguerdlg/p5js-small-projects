@@ -1,6 +1,5 @@
 const DEBUG_MODE = false;
-const TILE_WIDTH = 20;
-const TILE_HEIGHT = 20;
+const TILE_SIZE = 10;
 
 
 let rooms = [];
@@ -31,22 +30,32 @@ let triangles = [];
 
 let reached = [];
 
+let grid;
+
+let dungeon;
+
 function setup() {
 	createCanvas(windowWidth, windowHeight);
 	
 	// place rooms arround a circle or rectangle;
+	
 
 	const roomCount = 100;
-	const minRoomSize = 3;
-	const maxRoomSize = 10;
-	const cellCountH = Math.floor(windowWidth / TILE_WIDTH);
-	const cellCountV = Math.floor(windowHeight / TILE_HEIGHT);
+	const minRoomSize = 5;
+	const maxRoomSize = 20;
+	const hallwayStroke = 3;
+	const cellCountH = Math.floor(windowWidth / TILE_SIZE);
+	const cellCountV = Math.floor(windowHeight / TILE_SIZE);
 	let placedRooms = 0;
 	let attempts = 0;
 	const maxAttempts = 50;
 	let centerScreen = createVector(windowWidth * 0.5, windowHeight * 0.5);
 	let sizeSum = 0;
 	let circleLayout = 1;
+
+	//dungeon = new Dungeon(cellCountH, cellCountV);
+	//dungeon.generate(minRoomSize, maxRoomSize, hallwayStroke);
+
 	while(placedRooms < roomCount) { 
 		let room;
 		let w = Math.floor( randomRange(minRoomSize, maxRoomSize) );
@@ -54,17 +63,17 @@ function setup() {
 		if(!circleLayout){
 			let x = Math.floor( randomRange(1, cellCountH - w - 1) + 1 );
 			let y = Math.floor( randomRange(1, cellCountV - h - 1) + 1 );
-			room = new Room(x, y, w, h);		
+			room = new Room(x, y, w, h, TILE_SIZE);		
 		}
 		else{
 			let point = randomPointAtCircle(centerScreen.x, centerScreen.y, windowHeight * 0.5);
-			point.x = snapGridIndex(point.x, TILE_WIDTH);
-			point.y = snapGridIndex(point.y, TILE_HEIGHT);
-			room = new Room(point.x, point.y, w, h);	
+			point.x = snapGridIndex(point.x, TILE_SIZE);
+			point.y = snapGridIndex(point.y, TILE_SIZE);
+			room = new Room(point.x, point.y, w, h, TILE_SIZE);	
 		}
 		let valid = true;
 		for(let placedRoom of rooms){
-			if(placedRoom.intersectsOrTouches(room)){
+			if(placedRoom.rect.intersectsOrTouches(room.rect)){
 				valid = false;
 				break;
 			}
@@ -83,7 +92,6 @@ function setup() {
 		}
 	}
 	let sizeMean = sizeSum / rooms.length;
-	console.log(sizeMean);
 	
 	let unreached = [];
 	
@@ -124,9 +132,6 @@ function setup() {
 
 		connections.push([rIndex, reached.length-1]);
 	}
-
-
-	console.log(rooms.length);
 	
 	// generate Delaunay Triangulation for more organic connections
 	triangles = Delaunay.triangulate(vertices);
@@ -163,6 +168,8 @@ function setup() {
 	// Generate hallways with random L shapes, using midpoints between room centers.
 	let hallways = [];
 
+	let grid = new Grid(cellCountH, cellCountV);
+
 	for(let i = 0; i < reached.length; i++) {
 		for(let connection of connections){
 			if(connection[0] == i || connection[1] == i){
@@ -172,17 +179,19 @@ function setup() {
 				let dir = p5.Vector.sub(B.rect.center, A.rect.center);
 				let cuadrant = calculateCuadrant(dir);
 				let midpoint = createVector((B.rect.center.x + A.rect.center.x) / 2, (B.rect.center.y + A.rect.center.y) / 2);
+				midpoint.x = Math.floor(midpoint.x);
+				midpoint.y = Math.floor(midpoint.y);
 
 				if((midpoint.x >= A.rect.top_left.x && midpoint.x <= A.rect.top_right.x) &&
 					(midpoint.x >= B.rect.top_left.x && midpoint.x <= B.rect.top_right.x)) {
-					let start = createVector(midpoint.x, A.rect.center.y);
-					let end = createVector(midpoint.x, B.rect.center.y);
+					let start = createVector(midpoint.x, Math.floor(A.rect.center.y));
+					let end = createVector(midpoint.x, Math.floor(B.rect.center.y));
 					hallways.push([start, end]);
 				}
 				else if ((midpoint.y >= A.rect.top_left.y && midpoint.y <= A.rect.bottom_left.y) &&
 					(midpoint.y >= B.rect.top_left.y && midpoint.y <= B.rect.bottom_left.y)) {
-					let start = createVector(A.rect.center.x, midpoint.y);
-					let end = createVector(B.rect.center.x, midpoint.y);
+					let start = createVector(Math.floor(A.rect.center.x), midpoint.y);
+					let end = createVector(Math.floor(B.rect.center.x), midpoint.y);
 					hallways.push([start, end]);
 				}else{
 					let randLshape = Math.round(Math.random());
@@ -191,33 +200,41 @@ function setup() {
 					let joint = randLshape == 0 ? createVector(A.rect.center.x, B.rect.center.y) : createVector(B.rect.center.x, A.rect.center.y);
 					hallways.push([start, joint]);
 					hallways.push([joint, end]);
-
 				}
 			}
 		}
 	}
 
 	// Add rooms that touch the hallways to final room selection;
+	//console.log(cellCountH);
+	//console.log(cellCountV);
 	let dungeonRooms = [];
 	for(let room of rooms){
 		for(let hallway of hallways){
-			if(room.intersectsLine(hallway[0], hallway[1])) {
+			if(room.rect.intersectsLine(hallway[0], hallway[1])) {
 				room.color = {
 					r: 0,
 					g: 255,
 					b: 255,
 				}
+				grid.carveRect(room.rect);
 				dungeonRooms.push(room);
 			}
 		}
 	}
-
-	// draw
 	clear();
 	background(28,31,35);
+
+	for(let hallway of hallways) {
+		grid.carveLine(hallway[0], hallway[1], hallwayStroke);
+	}
+	// draw
+/*
 	for(let room of dungeonRooms){
 		room.draw();
 	}
+*/
+	grid.draw(TILE_SIZE);
 /*
 	for(let room of rooms){
 		room.draw();
@@ -233,10 +250,10 @@ function setup() {
 	for(let connection of connections){
 		let v1 = reached[connection[0]].rect.center;
 		let v2 = reached[connection[1]].rect.center;
-		line(v1.x * TILE_WIDTH, v1.y * TILE_HEIGHT, v2.x * TILE_WIDTH, v2.y * TILE_HEIGHT);
+		line(v1.x * TILE_SIZE, v1.y * TILE_SIZE, v2.x * TILE_SIZE, v2.y * TILE_SIZE);
 	}
 	for(let reachedRoom of reached){
-		ellipse(reachedRoom.rect.center.x * TILE_WIDTH, reachedRoom.rect.center.y * TILE_HEIGHT, 10, 10);
+		ellipse(reachedRoom.rect.center.x * TILE_SIZE, reachedRoom.rect.center.y * TILE_SIZE, 10, 10);
 	}
 	*/
 
@@ -248,7 +265,7 @@ function setup() {
 		--i;
 		let v1 = vertices[triangles[i]];
 		let v2 = vertices[triangles[i-1]];
-		line(v1[0] * TILE_WIDTH, v1[1] * TILE_HEIGHT, v2[0] * TILE_WIDTH, v2[1] * TILE_HEIGHT);
+		line(v1[0] * TILE_SIZE, v1[1] * TILE_SIZE, v2[0] * TILE_SIZE, v2[1] * TILE_SIZE);
 	}
 	*/
 
@@ -290,18 +307,20 @@ function setup() {
 					}
 				}
 				// midpoint
-				ellipse(midpoint.x * TILE_WIDTH, midpoint.y* TILE_HEIGHT, midpointRad, midpointRad);
+				ellipse(midpoint.x * TILE_SIZE, midpoint.y* TILE_SIZE, midpointRad, midpointRad);
 			}
 		}
 	}
 		*/
 
 	// draw hallways
+	/*
 	for(let hallway of hallways){
 		stroke(0,  255, 255);
-		strokeWeight(5);
-		line(hallway[0].x * TILE_WIDTH, hallway[0].y * TILE_HEIGHT, hallway[1].x * TILE_WIDTH, hallway[1].y * TILE_HEIGHT);
+		strokeWeight(2);
+		line(hallway[0].x * TILE_SIZE, hallway[0].y * TILE_SIZE, hallway[1].x * TILE_SIZE, hallway[1].y * TILE_SIZE);
 	}
+	*/
 }
 
 function calculateCuadrant(vec){

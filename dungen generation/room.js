@@ -37,27 +37,16 @@ class Rect {
 
 
 class Room {
-	constructor(x, y, w, h) {
+	constructor(x, y, w, h, tileSize) {
 		this.rect = new Rect(x, y, w, h);
-		this.screenPos = createVector(x * TILE_WIDTH, y * TILE_HEIGHT);
-		this.screenSize = createVector(w * TILE_WIDTH, h * TILE_HEIGHT);
+		this.tileSize = tileSize;
+		this.screenPos = createVector(x * this.tileSize, y * this.tileSize);
+		this.screenSize = createVector(w * this.tileSize, h * this.tileSize);
 		this.color = {
 			r: randomRange(127, 255),
 			g: randomRange(127, 255),
 			b: randomRange(127, 255),
 		}
-	}
-
-	intersects(other){
-		return this.rect.intersects(other.rect);
-	}
-
-	intersectsOrTouches(other){
-		return this.rect.intersectsOrTouches(other.rect);
-	}
-
-	intersectsLine(lineStart, lineEnd){
-		return this.rect.intersectsLine(lineStart, lineEnd);
 	}
 
 	draw(){
