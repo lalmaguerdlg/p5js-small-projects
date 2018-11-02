@@ -31,40 +31,12 @@ class Rect {
 		if(lineStart.y < this.top_left.y && lineEnd.y < this.top_left.y) return false;
 		return true;
 	}
-}
 
-
-
-
-class Room {
-	constructor(x, y, w, h, tileSize) {
-		this.rect = new Rect(x, y, w, h);
-		this.tileSize = tileSize;
-		this.screenPos = createVector(x * this.tileSize, y * this.tileSize);
-		this.screenSize = createVector(w * this.tileSize, h * this.tileSize);
-		this.color = {
-			r: randomRange(127, 255),
-			g: randomRange(127, 255),
-			b: randomRange(127, 255),
-		}
+	isWithinXBounds(point, deadZoneSize){
+		return (point.x >= (this.top_left.x + deadZoneSize) && point.x <= (this.top_right.x - deadZoneSize));
 	}
 
-	draw(){
-		fill(this.color.r, this.color.g, this.color.b);
-        noStroke();
-		rect(this.screenPos.x, this.screenPos.y, this.screenSize.x, this.screenSize.y);
-	}
-
-	get sizeRatio(){
-		let ratio = 0;
-		if(this.rect.height > this.rect.width)
-			ratio = this.rect.height / this.rect.width; 
-		else
-			ratio = this.rect.width / this.rect.height; 
-		return ratio;
-	}
-
-	get area(){
-		return this.rect.width * this.rect.height;
+	isWithinYBounds(point, deadZoneSize){
+		return (point.y >= (this.top_left.y + deadZoneSize) && point.y <= (this.bottom_left.y - deadZoneSize));
 	}
 }
