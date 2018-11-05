@@ -145,7 +145,7 @@ class Dungeon {
 		this.grid = new Grid(this.bounds.width, this.bounds.height);
 
 		this._carveGrid(this.grid, this.bounds, hallwaySize);
-		this._placeLights(this.grid, this.bounds, hallwaySize);
+		this._placeLights(this.grid, 4);
 	}
 
 	draw(tileSize){
@@ -506,15 +506,15 @@ class Dungeon {
 	}
 
 	_placeLights(grid, spacing) {
-		for(let room of this.rooms){
+		for(let room of this.rooms) {
 			room.forechTile(tile => {
 				if(tile.pos.x == room.gridRect.top_left.x || tile.pos.x == room.gridRect.bottom_right.x - 1) {
-					if(((tile.pos.y - room.gridRect.top_left.y) % 4) == 0) {
+					if(((tile.pos.y - room.gridRect.top_left.y) % spacing) == 0) {
 						this._placeLight(grid, tile);
 					}
 				}
 				if(tile.pos.y == room.gridRect.top_left.y || tile.pos.y == room.gridRect.bottom_right.y - 1) {
-					if( ((tile.pos.x - room.gridRect.top_left.x) % 4) == 0){
+					if( ((tile.pos.x - room.gridRect.top_left.x) % spacing) == 0){
 						this._placeLight(grid, tile);
 					}
 				}
@@ -525,13 +525,13 @@ class Dungeon {
 			hallway.forechTile(tile => {
 				if(hallway.type == 0){
 					if(tile.pos.y == hallway.gridRect.top_left.y || tile.pos.y == hallway.gridRect.bottom_right.y - 1) {
-						if( ((tile.pos.x - hallway.gridRect.top_left.x) % 4) == 0){
+						if( ((tile.pos.x - hallway.gridRect.top_left.x) % spacing) == 0){
 							this._placeLight(grid, tile);
 						}
 					}
 				} else if( hallway.type == 1 ){
 					if(tile.pos.x == hallway.gridRect.top_left.x || tile.pos.x == hallway.gridRect.bottom_right.x - 1) {
-						if(((tile.pos.y - hallway.gridRect.top_left.y) % 4) == 0) {
+						if(((tile.pos.y - hallway.gridRect.top_left.y) % spacing) == 0) {
 							this._placeLight(grid, tile);
 						}
 					}
