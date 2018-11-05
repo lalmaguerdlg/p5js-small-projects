@@ -22,6 +22,29 @@ class DungeonHallway{
 			g: randomRange(127, 255),
 			b: randomRange(127, 255),
 		}
+
+		if(end.y == start.y) {
+			this.type = 0;
+		}
+		else {
+			this.type = 1;
+		}
+
+		this.grid;
+		this.gridRect;
+	}
+
+	
+	forechTile(callback) {
+		if(this.gridRect){
+			let startPos = this.gridRect.top_left;
+			let endPos = this.gridRect.bottom_right;
+			for(let i = startPos.y; i < endPos.y; i++){
+				for(let j = startPos.x; j < endPos.x; j++){
+					callback(this.grid.getTile(j, i));
+				}
+			}
+		}
 	}
 }
 
@@ -37,6 +60,20 @@ class DungeonRoom {
 			r: randomRange(127, 255),
 			g: randomRange(127, 255),
 			b: randomRange(127, 255),
+		}
+		this.grid;
+		this.gridRect;
+	}
+
+	forechTile(callback) {
+		if(this.gridRect){
+			let startPos = this.gridRect.top_left;
+			let endPos = this.gridRect.bottom_right;
+			for(let i = startPos.y; i < endPos.y; i++){
+				for(let j = startPos.x; j < endPos.x; j++){
+					callback(this.grid.getTile(j, i));
+				}
+			}
 		}
 	}
 
@@ -108,6 +145,7 @@ class Dungeon {
 		this.grid = new Grid(this.bounds.width, this.bounds.height);
 
 		this._carveGrid(this.grid, this.bounds, hallwaySize);
+		this._placeLights(this.grid, this.bounds, hallwaySize);
 	}
 
 	draw(tileSize){
@@ -156,8 +194,9 @@ class Dungeon {
 					fill(hallway.color.r, hallway.color.g, hallway.color.b);
 				}
 				if(tile.hasLight){
-					fill(255, 0, 0);
+					fill(0, 255, 0);
 				}
+
 				rect(tile.pos.x * TILE_SIZE, tile.pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 			}
 		}
@@ -170,7 +209,7 @@ class Dungeon {
 		return result;
 	}
 
-	get s_nextHallwayId() {
+	get _nextHallwayId() {
 		let result = this._cached.nextHallwayId++;
 		return result;
 	}
@@ -306,7 +345,7 @@ class Dungeon {
 
 		// Generate hallways with random L shapes, using midpoints between room centers.
 		let hallways = [];
-		const boundsDeadZone = 1;
+		const boundsDeadZone = 2;
 		for(let i = 0; i < rooms.length; i++) {
 			for(let connection of connections){
 				if(connection[0] == i || connection[1] == i){
@@ -408,7 +447,20 @@ class Dungeon {
 	_carveGrid(grid, dungeonBounds, hallwayStroke) {
 		const offset = dungeonBounds.pos;
 
-
+		for(let roomIndex = 0; roomIndex < this.rooms.length; roomIndex++) {
+			let room = this.rooms[roomIndex];
+			let realPos = p5.Vector.sub(room.rect.pos, offset);
+			let limitW = Math.min(grid.width, realPos.x + room.rect.width);
+			let limitH = Math.min(grid.height, realPos.y + room.rect.height);
+			room.grid = grid;
+			room.gridRect = new Rect(realPos.x, realPos.y, room.rect.width, room.rect.height);
+			for(let i = realPos.y; i < limitH; i++){
+				for(let j = realPos.x; j < limitW; j++){
+					let newTile = new DungeonTile(j, i, roomIndex, true);
+					grid.tiles[ (i * grid.width ) + j] = newTile;
+				}
+			}
+		}
 
 		for(let hallwayIndex = 0; hallwayIndex < this.hallways.length; hallwayIndex++) {
 			let hallway = this.hallways[hallwayIndex];
@@ -430,16 +482,19 @@ class Dungeon {
 				endX = Math.min(grid.width, maxX);
 				startY = minY - stroke;
 				endY = Math.min(grid.height, maxY + stroke + (even ? 0 : 1));
-			}else{
+			} else {
 				startX = minX - stroke;
 				endX =  Math.min(grid.width, maxX + stroke + (even ? 0 : 1));
 				startY = minY;
 				endY = Math.min(grid.height, maxY);	
 			}
 		
+			hallway.grid = grid;
+			hallway.gridRect = new Rect(startX, startY, endX - startX, endY - startY);
+
 			for(let i = startY; i < endY; i++) {
 				for(let j = startX; j < endX; j++) {
-					let tile = grid.tiles[ (i * grid.width ) + j ];
+					let tile = grid.getTile(j, i);
 					if(tile == 0){
 						grid.tiles[ (i * grid.width ) + j ] = new DungeonTile(j, i, hallwayIndex, false); 
 					}
@@ -448,41 +503,41 @@ class Dungeon {
 			}
 		}
 
-		for(let roomIndex = 0; roomIndex < this.rooms.length; roomIndex++) {
-			let room = this.rooms[roomIndex];
-			let realPos = p5.Vector.sub(room.rect.pos, offset);
-			let limitW = Math.min(grid.width, realPos.x + room.rect.width);
-			let limitH = Math.min(grid.height, realPos.y + room.rect.height);
-			for(let i = realPos.y; i < limitH; i++){
-				for(let j = realPos.x; j < limitW; j++){
-					let newTile = new DungeonTile(j, i, roomIndex, true);
-					grid.tiles[ (i * grid.width ) + j] = newTile;  
+	}
+
+	_placeLights(grid, spacing) {
+		for(let room of this.rooms){
+			room.forechTile(tile => {
+				if(tile.pos.x == room.gridRect.top_left.x || tile.pos.x == room.gridRect.bottom_right.x - 1) {
+					if(((tile.pos.y - room.gridRect.top_left.y) % 4) == 0) {
+						this._placeLight(grid, tile);
+					}
 				}
-			}
+				if(tile.pos.y == room.gridRect.top_left.y || tile.pos.y == room.gridRect.bottom_right.y - 1) {
+					if( ((tile.pos.x - room.gridRect.top_left.x) % 4) == 0){
+						this._placeLight(grid, tile);
+					}
+				}
+			})
 		}
 
-		for(let room of this.rooms) {
-			let realPos = p5.Vector.sub(room.rect.pos, offset);
-			let limitW = Math.min(grid.width, realPos.x + room.rect.width);
-			let limitH = Math.min(grid.height, realPos.y + room.rect.height);
-			for(let i = realPos.y; i < limitH; i++){
-				for(let j = realPos.x; j < limitW; j++){
-					let tile = grid.getTile(j, i);
-					if(j == realPos.x || j == limitW - 1) {
-						if(((i - realPos.y) % 3) == 0) {
+		for(let hallway of this.hallways) {
+			hallway.forechTile(tile => {
+				if(hallway.type == 0){
+					if(tile.pos.y == hallway.gridRect.top_left.y || tile.pos.y == hallway.gridRect.bottom_right.y - 1) {
+						if( ((tile.pos.x - hallway.gridRect.top_left.x) % 4) == 0){
 							this._placeLight(grid, tile);
 						}
 					}
-
-					if(i == realPos.y || i == limitH - 1){
-						if( ((j - realPos.x) % 3) == 0){
+				} else if( hallway.type == 1 ){
+					if(tile.pos.x == hallway.gridRect.top_left.x || tile.pos.x == hallway.gridRect.bottom_right.x - 1) {
+						if(((tile.pos.y - hallway.gridRect.top_left.y) % 4) == 0) {
 							this._placeLight(grid, tile);
 						}
 					}
 				}
-			}
+			});
 		}
-
 	}
 
 }
