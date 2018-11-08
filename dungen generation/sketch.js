@@ -1,5 +1,5 @@
 const DEBUG_MODE = false;
-const TILE_SIZE = 10;
+const TILE_SIZE = 8;
 
 let dungeon;
 
@@ -14,9 +14,11 @@ function setup() {
 	const hallwayStroke = 3;
 	const cellCountH = Math.floor(windowWidth / TILE_SIZE);
 	const cellCountV = Math.floor(windowHeight / TILE_SIZE);
+	colorMode(HSL);
 	
 	dungeon = new Dungeon(cellCountH, cellCountV);
 	dungeon.generate(minRoomSize, maxRoomSize, hallwayStroke);
+
 
 	dungeon.draw(TILE_SIZE);
 }

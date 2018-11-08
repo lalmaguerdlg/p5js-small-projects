@@ -1,15 +1,29 @@
-class DungeonTile{
+const LIGHT_LEVELS = 7;
+const LIGHTNESS_STEP = 100 / LIGHT_LEVELS;
+
+class DungeonTile {
 	constructor(x, y, index, isRoom) {
 		this.pos = createVector(x, y);
 		this.index = index;
 		this.isRoom = isRoom;
 		this.hasLight = false;
+		this.lightLevel = 1;
+		this.isWall = false;
+	}
+
+	get neighborPositions() {
+		return {
+			up: 	{ x: this.pos.x, 		y: this.pos.y - 1 },
+			right: 	{ x: this.pos.x + 1, 	y: this.pos.y },
+			down: 	{ x: this.pos.x, 		y: this.pos.y + 1 },
+			left: 	{ x: this.pos.x - 1, 	y: this.pos.y },
+		}
 	}
 }
 
-class DungeonHallway{
+class DungeonHallway {
 	constructor(id, start, end, startIndex, endIndex) {
-		this.id = 0;
+		this.id = id;
 		this.start = start;
 		this.end = end;
 		this.rooms = {
@@ -17,12 +31,8 @@ class DungeonHallway{
 			end: endIndex,
 			extra: []
 		}
-		this.color = {
-			r: randomRange(127, 255),
-			g: randomRange(127, 255),
-			b: randomRange(127, 255),
-		}
-
+		this.color = color(randomRange(0, 360), randomRange(25, 75), LIGHTNESS_STEP * 1);
+		
 		if(end.y == start.y) {
 			this.type = 0;
 		}
@@ -34,8 +44,7 @@ class DungeonHallway{
 		this.gridRect;
 	}
 
-	
-	forechTile(callback) {
+	foreachTile(callback) {
 		if(this.gridRect){
 			let startPos = this.gridRect.top_left;
 			let endPos = this.gridRect.bottom_right;
@@ -56,16 +65,12 @@ class DungeonRoom {
 		this.tileSize = tileSize;
 		this.screenPos = createVector(x * this.tileSize, y * this.tileSize);
 		this.screenSize = createVector(w * this.tileSize, h * this.tileSize);
-		this.color = {
-			r: randomRange(127, 255),
-			g: randomRange(127, 255),
-			b: randomRange(127, 255),
-		}
+		this.color = color(randomRange(0, 360), randomRange(25, 75), LIGHTNESS_STEP * 1);
 		this.grid;
 		this.gridRect;
 	}
 
-	forechTile(callback) {
+	foreachTile(callback) {
 		if(this.gridRect){
 			let startPos = this.gridRect.top_left;
 			let endPos = this.gridRect.bottom_right;
@@ -77,8 +82,8 @@ class DungeonRoom {
 		}
 	}
 
-	draw(){
-		fill(this.color.r, this.color.g, this.color.b);
+	draw() {
+		fill(this.color);
         noStroke();
 		rect(this.screenPos.x, this.screenPos.y, this.screenSize.x, this.screenSize.y);
 	}
@@ -105,6 +110,8 @@ class Dungeon {
 		this.rooms = [];
 		this.mainRooms = [];
 		this.hallways = [];
+		this.lightTiles = [];
+		this.wallTiles = [];
 		this.debug_info = {
 			connections: [],
 			triangles: [],
@@ -145,7 +152,8 @@ class Dungeon {
 		this.grid = new Grid(this.bounds.width, this.bounds.height);
 
 		this._carveGrid(this.grid, this.bounds, hallwaySize);
-		this._placeLights(this.grid, 4);
+		this._placeLightsAndWalls(this.grid, 8);
+		this._propagateLights(this.grid, this.lightTiles);
 	}
 
 	draw(tileSize){
@@ -180,28 +188,31 @@ class Dungeon {
 			rect(this.bounds.pos.x * TILE_SIZE, this.bounds.pos.y * TILE_SIZE, this.bounds.width * TILE_SIZE, this.bounds.height * TILE_SIZE);
 		}
 
-		
+		noStroke();
 		for(let tile of this.grid.tiles) {
-			stroke(255, 255, 255);
-			strokeWeight(1);
+			//stroke(255, 255, 255);
+			//strokeWeight(1);
+			
 			if(tile != 0) {
 				if(tile.isRoom){
 					let room = this.rooms[tile.index];
-					fill(room.color.r, room.color.g, room.color.b);
+					fill(room.color.levels[0], room.color.levels[1], tile.lightLevel * LIGHTNESS_STEP);
 				}
 				else{
 					let hallway = this.hallways[tile.index];
-					fill(hallway.color.r, hallway.color.g, hallway.color.b);
+					fill(hallway.color.levels[0], hallway.color.levels[1], tile.lightLevel * LIGHTNESS_STEP);
 				}
-				if(tile.hasLight){
-					fill(0, 255, 0);
-				}
+				/*if(tile.isWall){
+					fill(hallway.color.levels[0], hallway.color.levels[1], LIGHTNESS_STEP);
+				}*/
+				/*if(tile.hasLight){
+					fill(120, 100, 50);
+				}*/
 
 				rect(tile.pos.x * TILE_SIZE, tile.pos.y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
 			}
 		}
 
-		//this.grid.draw(tileSize);
 	}
 
 	get _nextRoomId() {
@@ -388,11 +399,7 @@ class Dungeon {
 			if(!room.isMain) {
 				for(let hallway of hallways) {
 					if(room.rect.intersectsLine(hallway.start, hallway.end)) {
-						room.color = {
-							r: randomRange(100, 125),
-							g: randomRange(100, 125),
-							b: randomRange(100, 125),
-						}
+						//room.color = color(randomRange(0, 360), randomRange(25, 75), randomRange(0, 100));
 						room.id = this._nextRoomId;
 						hallway.rooms.extra.push(room.id);
 						dungeonRooms.push(room);
@@ -416,34 +423,6 @@ class Dungeon {
 		return new Rect(min.x - 2, min.y - 2, max.x - min.x + 4, max.y - min.y + 4);
 	}
 
-	_placeLight(grid, tile) {
-		let neighbors = {
-			up: 	grid.getTile(tile.pos.x, 	tile.pos.y - 1),
-			right: 	grid.getTile(tile.pos.x + 1, tile.pos.y),
-			down: 	grid.getTile(tile.pos.x, tile.pos.y + 1),
-			left: 	grid.getTile(tile.pos.x - 1, tile.pos.y),
-		}
-
-		let neighborHasLight = false;
-		let wallCount = 0;
-		for(let direction in neighbors) {
-			let neighborTile = neighbors[direction];
-			if( neighborTile == 0) {
-				wallCount++;
-			}
-			else{
-				if(neighborTile.hasLight){
-					neighborHasLight = true;
-				}
-			}
-		}
-
-		fill(0, 255, 0);
-		if(!neighborHasLight && wallCount > 0) {
-			tile.hasLight = true;
-		}
-	}
-
 	_carveGrid(grid, dungeonBounds, hallwayStroke) {
 		const offset = dungeonBounds.pos;
 
@@ -454,12 +433,10 @@ class Dungeon {
 			let limitH = Math.min(grid.height, realPos.y + room.rect.height);
 			room.grid = grid;
 			room.gridRect = new Rect(realPos.x, realPos.y, room.rect.width, room.rect.height);
-			for(let i = realPos.y; i < limitH; i++){
-				for(let j = realPos.x; j < limitW; j++){
-					let newTile = new DungeonTile(j, i, roomIndex, true);
-					grid.tiles[ (i * grid.width ) + j] = newTile;
-				}
-			}
+			room.gridRect.foreachPoint((x, y) => {
+				let newTile = new DungeonTile(x, y, roomIndex, true);
+				grid.setTile(x, y, newTile);
+			});
 		}
 
 		for(let hallwayIndex = 0; hallwayIndex < this.hallways.length; hallwayIndex++) {
@@ -492,52 +469,145 @@ class Dungeon {
 			hallway.grid = grid;
 			hallway.gridRect = new Rect(startX, startY, endX - startX, endY - startY);
 
-			for(let i = startY; i < endY; i++) {
-				for(let j = startX; j < endX; j++) {
-					let tile = grid.getTile(j, i);
-					if(tile == 0){
-						grid.tiles[ (i * grid.width ) + j ] = new DungeonTile(j, i, hallwayIndex, false); 
-					}
-					
+			hallway.gridRect.foreachPoint((x, y) => {
+				let tile = grid.getTile(x, y);
+				if(tile == 0){
+					grid.setTile(x, y, new DungeonTile(x, y, hallwayIndex, false));
 				}
-			}
+			});
 		}
 
 	}
 
-	_placeLights(grid, spacing) {
+	_placeLight(grid, tile) {
+		let neighbors = tile.neighborPositions;
+
+		let neighborHasLight = false;
+		let wallCount = 0;
+		for(let direction in neighbors) {
+			let pos = neighbors[direction];
+			let neighborTile = grid.getTile(pos.x, pos.y);
+			if( neighborTile == 0 || neighborTile.isWall)  {
+				wallCount++;
+				break;
+			}
+			else {
+				if(neighborTile.hasLight){
+					neighborHasLight = true;
+					break;
+				}
+			}
+		}
+
+		fill(0, 255, 0);
+		if(!neighborHasLight && wallCount > 0) {
+			tile.hasLight = true;
+			this.lightTiles.push(tile);
+		}
+	}
+
+	_placeWallArroundTile(grid, tile) {
+		let tileBounds = new Rect(tile.pos.x - 1, tile.pos.y - 1, 3, 3);
+		tileBounds.foreachPoint((x, y) => {
+			let neighborTile = grid.getTile(x, y);
+			if( neighborTile == 0 )  {
+				neighborTile = new DungeonTile(x, y, tile.index, tile.isRoom);
+				neighborTile.isWall = true;
+				grid.setTile(x, y, neighborTile);
+				this.wallTiles.push(neighborTile);
+			}
+		});
+	}
+
+	_placeLightsAndWalls(grid, spacing) {
 		for(let room of this.rooms) {
-			room.forechTile(tile => {
+			room.foreachTile(tile => {
 				if(tile.pos.x == room.gridRect.top_left.x || tile.pos.x == room.gridRect.bottom_right.x - 1) {
 					if(((tile.pos.y - room.gridRect.top_left.y) % spacing) == 0) {
 						this._placeLight(grid, tile);
 					}
+					this._placeWallArroundTile(grid, tile);
 				}
 				if(tile.pos.y == room.gridRect.top_left.y || tile.pos.y == room.gridRect.bottom_right.y - 1) {
 					if( ((tile.pos.x - room.gridRect.top_left.x) % spacing) == 0){
 						this._placeLight(grid, tile);
 					}
+					this._placeWallArroundTile(grid, tile);
 				}
 			})
 		}
 
 		for(let hallway of this.hallways) {
-			hallway.forechTile(tile => {
+			hallway.foreachTile(tile => {
 				if(hallway.type == 0){
 					if(tile.pos.y == hallway.gridRect.top_left.y || tile.pos.y == hallway.gridRect.bottom_right.y - 1) {
 						if( ((tile.pos.x - hallway.gridRect.top_left.x) % spacing) == 0){
 							this._placeLight(grid, tile);
 						}
 					}
+					this._placeWallArroundTile(grid, tile);
+
 				} else if( hallway.type == 1 ){
 					if(tile.pos.x == hallway.gridRect.top_left.x || tile.pos.x == hallway.gridRect.bottom_right.x - 1) {
 						if(((tile.pos.y - hallway.gridRect.top_left.y) % spacing) == 0) {
 							this._placeLight(grid, tile);
 						}
 					}
+					this._placeWallArroundTile(grid, tile);
 				}
 			});
 		}
+	}
+
+	_propagateLights(grid, lightTiles) {
+		for(let tile of lightTiles) {
+			this._floodFillLightLinear(grid, tile, LIGHT_LEVELS);
+		}
+	}
+
+	_floodFillLightLinear(grid, tile, level) {
+		if(level == 0) return;
+		let neighbors = {
+			up: 	grid.getTile(tile.pos.x, 	tile.pos.y - 1),
+			right: 	grid.getTile(tile.pos.x + 1, tile.pos.y),
+			down: 	grid.getTile(tile.pos.x, tile.pos.y + 1),
+			left: 	grid.getTile(tile.pos.x - 1, tile.pos.y),
+		}
+
+		for(let direction in neighbors) {
+			let neighbor = neighbors[direction];
+			if(neighbor != 0 && !neighbor.isWall) {
+				if(neighbor.lightLevel < level - 1)
+					this._floodFillLightLinear(grid, neighbor, level - 1);
+			}
+		}
+
+		tile.lightLevel = level;
+	}
+
+	_floodFillLightRadial(grid, origin, level) {
+		if(level <= 0) return;
+
+		let even = (level % 2) == 0; 
+		let rad = even ? level * 0.5 : (level - 1) * 0.5;
+
+		let lightbounds = new Rect(origin.pos.x - rad, origin.pos.y - rad, even ? level + 1 : level, even ? level + 1 : level);
+		let lightLevel = level;
+		lightbounds.foreachPoint((x, y) => {
+			let neighbor = grid.getTile(x, y);
+			if(neighbor && neighbor != 0 && !neighbor.isWall) {
+				if(origin != neighbor){
+					let distance = dist(origin.pos.x, origin.pos.y, origin.pos.z, neighbor.pos.x, neighbor.pos.y, neighbor.pos.z);
+					lightLevel = Math.floor(level - distance);
+					if(neighbor.lightLevel < lightLevel) {
+						neighbor.lightLevel = lightLevel;
+					}
+				}
+				else{
+					origin.lightLevel = level;
+				}
+			}
+		});
 	}
 
 }

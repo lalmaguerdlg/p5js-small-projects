@@ -39,4 +39,12 @@ class Rect {
 	isWithinYBounds(point, deadZoneSize){
 		return (point.y >= (this.top_left.y + deadZoneSize) && point.y <= (this.bottom_left.y - deadZoneSize));
 	}
+
+	foreachPoint(callback){
+		for(let i = this.top_left.y; i < this.bottom_right.y; i++){
+			for(let j = this.top_left.x; j < this.bottom_right.x; j++){
+				callback(j, i);
+			}
+		}
+	}
 }

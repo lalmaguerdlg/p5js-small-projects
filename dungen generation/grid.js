@@ -63,6 +63,10 @@ class Grid {
 		return this.tiles[(y * this.width) + x];
 	}
 
+	setTile(x, y, value) {
+		return this.tiles[(y * this.width) + x] = value;
+	}
+
 	draw(tileSize){
 		stroke(255, 255, 255);
 		strokeWeight(1);
