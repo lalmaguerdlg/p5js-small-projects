@@ -202,9 +202,9 @@ class Dungeon {
 					let hallway = this.hallways[tile.index];
 					fill(hallway.color.levels[0], hallway.color.levels[1], tile.lightLevel * LIGHTNESS_STEP);
 				}
-				/*if(tile.isWall){
-					fill(hallway.color.levels[0], hallway.color.levels[1], LIGHTNESS_STEP);
-				}*/
+				if(tile.isWall){
+					fill(120, 100, 0);
+				}
 				/*if(tile.hasLight){
 					fill(120, 100, 50);
 				}*/
@@ -562,6 +562,7 @@ class Dungeon {
 	_propagateLights(grid, lightTiles) {
 		for(let tile of lightTiles) {
 			this._floodFillLightLinear(grid, tile, LIGHT_LEVELS);
+			//this._floodFillLightRadial(grid, tile, LIGHT_LEVELS)
 		}
 	}
 
