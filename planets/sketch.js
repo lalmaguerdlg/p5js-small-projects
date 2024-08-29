@@ -1,6 +1,12 @@
-const DEBUG_MODE = false;
+let DEBUG_MODE = false;
 const CLEAR_SCREEN = true;
 const LIMIT_BORDER_OFFSET = 50;
+
+window.addEventListener('keydown', function(e){
+	if (e.key === 'd') {
+		DEBUG_MODE = !DEBUG_MODE;
+	}
+})
 
 var acel = 0;
 var vel = 0;

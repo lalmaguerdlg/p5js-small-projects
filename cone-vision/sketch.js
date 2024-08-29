@@ -1,5 +1,10 @@
-let DEBUG_MODE = false;
+let DEBUG_MODE = true;
 let LIMIT_BORDER_OFFSET = 20;
+window.addEventListener('keydown', function(e){
+	if (e.key === 'd') {
+		DEBUG_MODE = !DEBUG_MODE;
+	}
+})
 
 let movers = new Array();
 //let attackers = new Array();
@@ -10,6 +15,7 @@ let startPos = 0;
 function setup() {
 	createCanvas(windowWidth, windowHeight);
 }
+
 
 
 function draw() {

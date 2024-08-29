@@ -1,5 +1,10 @@
 let DEBUG_MODE = false;
 const LIMIT_BORDER_OFFSET = 50;
+window.addEventListener('keydown', function(e){
+	if (e.key === 'd') {
+		DEBUG_MODE = !DEBUG_MODE;
+	}
+})
 
 var gravity = 0;
 

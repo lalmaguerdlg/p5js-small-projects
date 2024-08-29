@@ -1,6 +1,12 @@
 const DEBUG_MODE = false;
 const TILE_SIZE = 8;
 
+window.addEventListener('keydown', function(e){
+	if (e.key === 'd') {
+		DEBUG_MODE = !DEBUG_MODE;
+	}
+})
+
 let dungeon;
 
 function setup() {

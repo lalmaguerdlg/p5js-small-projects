@@ -1,3 +1,4 @@
+let DEBUG_MODE = true;
 const DEBUG = {
 	enabled: true,
 	show_quadtree: true,
@@ -6,6 +7,35 @@ const DEBUG = {
 	show_point_count: true
 }
 var QUERY_METHOD = 2;
+window.addEventListener('keydown', function(e){
+	if (e.key === 'd') {
+		const debug_mode = !DEBUG.enabled;
+		DEBUG.enabled = debug_mode;
+		DEBUG.show_quadtree = debug_mode;
+		DEBUG.show_quadrants = debug_mode;
+		DEBUG.show_mouse_region = debug_mode;
+		DEBUG.show_point_count = debug_mode;
+	}
+	if (e.key === '1') {
+		QUERY_METHOD = 1;
+	}
+	if (e.key === '2') {
+		QUERY_METHOD = 2;
+	}
+	if (e.key === '3') {
+		DEBUG.show_quadtree = !DEBUG.show_quadtree;
+	}
+	if (e.key === '4') {
+		DEBUG.show_quadrants = !DEBUG.show_quadrants;
+	}
+	if (e.key === '5') {
+		DEBUG.show_mouse_region = !DEBUG.show_mouse_region;
+	}
+	if (e.key === '6') {
+		DEBUG.show_point_count = !DEBUG.show_point_count;
+	}
+})
+
 let qtree;
 let last_mouse;
 let mouse;
@@ -21,10 +51,10 @@ function setup() {
 	mouse = new Point(0, 0);
 	mouse_circle = new Circle(0, 0, 70);
 	//mouse_circle = new Rectangle(0, 0, 70, 70);
-	for(let i = 0; i < 1000; i++){
-		let p = new Point((random() * windowWidth), (random() * windowHeight));
-		qtree.insert(p);
-	}
+	// for(let i = 0; i < 1000; i++){
+	// 	let p = new Point((random() * windowWidth), (random() * windowHeight));
+	// 	qtree.insert(p);
+	// }
 	console.log(qtree);
 	rectMode(CENTER);
 }
